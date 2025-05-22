@@ -87,16 +87,26 @@ export default function PokemonDetailScreen() {
     );
     
     if (!englishEntry) return "No description available.";
-    
+  
     // Clean up all formatting characters and normalize spacing
     return englishEntry.flavor_text
-      .replace(/\f/g, ' ')        // Remove form feed characters
-      .replace(/\n/g, ' ')        // Remove line breaks
-      .replace(/\r/g, ' ')        // Remove carriage returns
-      .replace(/\t/g, ' ')        // Remove tabs
-      .replace(/POKéMON/g, 'Pokémon')  // Fix the all-caps formatting
-      .replace(/\s+/g, ' ')       // Replace multiple spaces with single space
-      .trim();                    // Remove leading/trailing whitespace
+      .replace(/\f/g, ' ')           // Remove form feed characters
+      .replace(/\n/g, ' ')           // Remove line breaks
+      .replace(/\r/g, ' ')           // Remove carriage returns
+      .replace(/\t/g, ' ')           // Remove tabs
+      .replace(/\u00ad/g, '')        // Remove soft hyphens
+      .replace(/\u2010/g, '-')       // Replace hyphens with regular dash
+      .replace(/\u2011/g, '-')       // Replace non-breaking hyphens
+      .replace(/\u2012/g, '-')       // Replace figure dash
+      .replace(/\u2013/g, '-')       // Replace en dash
+      .replace(/\u2014/g, '-')       // Replace em dash
+      .replace(/­/g, '')             // Remove soft hyphen (HTML entity)
+      .replace(/con­\s*tinuously/g, 'continuously')  // Fix specific broken words
+      .replace(/seven-\s*colored/g, 'seven-colored')  // Fix specific broken words
+      .replace(/POKéMON/g, 'Pokémon') // Fix the all-caps formatting
+      .replace(/\s+/g, ' ')          // Replace multiple spaces with single space
+      .replace(/\s*-\s*/g, '-')      // Clean up spaces around dashes
+      .trim();                       // Remove leading/trailing whitespace
   };
   
   if (loading) {
