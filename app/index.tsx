@@ -178,21 +178,24 @@ export default function HomePage() {
     <SafeAreaView style={styles.container}>
       {/* Search Input */}
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search Pokemon by name..."
-          value={searchQuery}
-          onChangeText={handleSearch}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search Pokemon by name or number..."
+        value={searchQuery}
+        onChangeText={handleSearch}
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
       </View>
       
       <View style={styles.countContainer}>
+        <Text style={styles.generationInfo}>
+          Pokémon from Generation 1-9
+        </Text>
         <Text style={styles.totalCount}>
           {searchQuery.trim() 
             ? `Found ${searchResults.length} Pokémon` 
-            : `Total Pokémon: ${pokemonData?.count || 0}`
+            : `Total: 1,008 Pokémon`
           }
         </Text>
         {searchQuery.trim() && (
@@ -255,14 +258,21 @@ const styles = StyleSheet.create({
   },
   countContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
+  generationInfo: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#f4511e',
+    marginBottom: 4,
+  },
   totalCount: {
     fontSize: 16,
     fontWeight: '500',
+    color: '#333',
   },
   filterInfo: {
     fontSize: 14,
