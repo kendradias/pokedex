@@ -7,8 +7,10 @@ import {
   ScrollView, 
   TouchableOpacity, 
   ActivityIndicator, 
-  Dimensions 
+  Dimensions,
+  Platform 
 } from "react-native";
+
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getPokemonDetails, getPokemonSpecies } from "../../utils/api";
 import { Pokemon, PokemonSpecies } from "../../types/pokemon";
@@ -84,9 +86,17 @@ export default function PokemonDetailScreen() {
       entry => entry.language.name === "en"
     );
     
-    return englishEntry 
-      ? englishEntry.flavor_text.replace(/\f/g, ' ') 
-      : "No description available.";
+    if (!englishEntry) return "No description available.";
+    
+    // Clean up all formatting characters and normalize spacing
+    return englishEntry.flavor_text
+      .replace(/\f/g, ' ')        // Remove form feed characters
+      .replace(/\n/g, ' ')        // Remove line breaks
+      .replace(/\r/g, ' ')        // Remove carriage returns
+      .replace(/\t/g, ' ')        // Remove tabs
+      .replace(/POKéMON/g, 'Pokémon')  // Fix the all-caps formatting
+      .replace(/\s+/g, ' ')       // Replace multiple spaces with single space
+      .trim();                    // Remove leading/trailing whitespace
   };
   
   if (loading) {
@@ -121,7 +131,17 @@ export default function PokemonDetailScreen() {
       case "about":
         return (
           <View style={styles.aboutContainer}>
-            <Text style={styles.description}>{getEnglishDescription()}</Text>
+            <Text style={[
+              styles.description,
+              // Additional web-specific styling if needed
+              Platform.OS === 'web' && width > 768 && {
+                fontSize: 16,
+                lineHeight: 26,
+                letterSpacing: 0.2,
+              }
+            ]}>
+              {getEnglishDescription()}
+            </Text>
             
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Height:</Text>
@@ -248,6 +268,7 @@ export default function PokemonDetailScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -294,6 +315,10 @@ const styles = StyleSheet.create({
   infoSection: {
     padding: 20,
     paddingTop: 30,
+    // Add responsive constraints for web
+    maxWidth: width > 768 ? 600 : '100%',
+    alignSelf: 'center',
+    width: '100%',
   },
   pokemonId: {
     fontSize: 16,
@@ -346,17 +371,24 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   description: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: Platform.OS === 'web' ? 16 : 14,
+    lineHeight: Platform.OS === 'web' ? 24 : 20,
     color: "#333",
     marginBottom: 16,
+    textAlign: 'left',
+    // Better text wrapping for web
+    ...(Platform.OS === 'web' && width > 768 && {
+      maxWidth: '90%',
+      alignSelf: 'flex-start',
+    }),
   },
   infoRow: {
     flexDirection: "row",
     marginBottom: 8,
+    flexWrap: 'wrap', // Allow wrapping on smaller screens
   },
   infoLabel: {
-    width: 100,
+    width: Platform.OS === 'web' && width > 768 ? 120 : 100,
     fontSize: 14,
     fontWeight: "500",
     color: "#555",
@@ -364,6 +396,7 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 14,
     color: "#333",
+    flex: Platform.OS === 'web' ? 1 : 0, // Take remaining space on web
   },
   abilitiesContainer: {
     flex: 1,
