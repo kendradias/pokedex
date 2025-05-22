@@ -15,6 +15,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { getPokemonDetails, getPokemonSpecies } from "../../utils/api";
 import { Pokemon, PokemonSpecies } from "../../types/pokemon";
 import StatBar from "../../components/StatBar";
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get("window");
 
@@ -28,6 +29,14 @@ export default function PokemonDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("about");
   
+  //navigation helpers
+  const currentId = parseInt(id);
+  const prevId = currentId > 1 ? currentId - 1 : null;
+  const nextId = currentId < 1008 ? currentId + 1 : null;
+  const navigateToPokemon = (newId: number) => {
+    router.push(`/pokemon/${newId}`);
+  };
+
   useEffect(() => {
     const fetchPokemonData = async () => {
       try {
@@ -101,8 +110,6 @@ export default function PokemonDetailScreen() {
       .replace(/\u2013/g, '-')       // Replace en dash
       .replace(/\u2014/g, '-')       // Replace em dash
       .replace(/­/g, '')             // Remove soft hyphen (HTML entity)
-      .replace(/con­\s*tinuously/g, 'continuously')  // Fix specific broken words
-      .replace(/seven-\s*colored/g, 'seven-colored')  // Fix specific broken words
       .replace(/POKéMON/g, 'Pokémon') // Fix the all-caps formatting
       .replace(/\s+/g, ' ')          // Replace multiple spaces with single space
       .replace(/\s*-\s*/g, '-')      // Clean up spaces around dashes
@@ -199,38 +206,61 @@ export default function PokemonDetailScreen() {
   
   return (
     <ScrollView style={styles.container}>
-      {/* Header with background color based on Pokemon type */}
-      <View style={[styles.header, { backgroundColor: mainColor }]}>
-        {/* Pokemon image */}
-        <Image
-          source={{ 
-            uri: pokemon.sprites.other['official-artwork'].front_default || 
-                 pokemon.sprites.front_default 
-          }}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
+    {/* Header with background color based on Pokemon type */}
+    <View style={[styles.header, { backgroundColor: mainColor }]}>
+      {/* Pokemon image */}
+      <Image
+        source={{ 
+          uri: pokemon.sprites.other['official-artwork'].front_default || 
+               pokemon.sprites.front_default 
+        }}
+        style={styles.image}
+        resizeMode="contain"
+      />
+    </View>
+    
+    {/* Pokemon info section */}
+    <View style={styles.infoSection}>
+      <Text style={styles.pokemonId}>#{id.padStart(3, '0')}</Text>
+      <Text style={styles.pokemonName}>{pokemon.name}</Text>
       
-      {/* Pokemon info section */}
-      <View style={styles.infoSection}>
-        <Text style={styles.pokemonId}>#{id.padStart(3, '0')}</Text>
-        <Text style={styles.pokemonName}>{pokemon.name}</Text>
+      {/* Quick navigation with numbers */}
+      <View style={styles.quickNavContainer}>
+        {prevId && (
+          <TouchableOpacity 
+            style={styles.quickNavButton}
+            onPress={() => navigateToPokemon(prevId)}
+          >
+            <Text style={styles.quickNavText}>← #{prevId.toString().padStart(3, '0')}</Text>
+          </TouchableOpacity>
+        )}
         
-        {/* Types */}
-        <View style={styles.typesContainer}>
-          {pokemon.types.map(typeInfo => (
-            <View 
-              key={typeInfo.type.name} 
-              style={[
-                styles.typeTag, 
-                { backgroundColor: getTypeColor(typeInfo.type.name) }
-              ]}
-            >
-              <Text style={styles.typeText}>{typeInfo.type.name}</Text>
-            </View>
-          ))}
-        </View>
+        <View style={styles.spacer} />
+        
+        {nextId && (
+         <TouchableOpacity 
+           style={styles.quickNavButton}
+           onPress={() => navigateToPokemon(nextId)}
+         >
+           <Text style={styles.quickNavText}>#{nextId.toString().padStart(3, '0')} →</Text>
+         </TouchableOpacity>
+       )}
+     </View>
+     
+     {/* Types */}
+     <View style={styles.typesContainer}>
+       {pokemon.types.map(typeInfo => (
+         <View 
+           key={typeInfo.type.name} 
+           style={[
+             styles.typeTag, 
+             { backgroundColor: getTypeColor(typeInfo.type.name) }
+           ]}
+         >
+           <Text style={styles.typeText}>{typeInfo.type.name}</Text>
+         </View>
+       ))}
+     </View>
         
         {/* Tabs for different sections */}
         <View style={styles.tabsContainer}>
@@ -342,6 +372,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   typesContainer: {
+    paddingHorizontal: 4,
     flexDirection: "row",
     marginBottom: 24,
   },
@@ -420,5 +451,25 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     paddingBottom: 24,
+  },
+  quickNavContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  quickNavButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    backgroundColor: '#EEB7B7',
+    borderRadius: 20,
+  },
+  quickNavText: {
+    fontSize: 14,
+    color: 'black',
+    fontWeight: '500',
+  },
+  spacer: {
+    flex: 1,
   },
 });
