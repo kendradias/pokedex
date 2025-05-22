@@ -1,6 +1,7 @@
+// components/PokemonCard.tsx
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router"; // Change from Link to useRouter
+import { useRouter } from "expo-router";
 import { getPokemonDetails } from "../utils/api";
 
 type PokemonCardProps = {
@@ -8,12 +9,13 @@ type PokemonCardProps = {
     name: string;
     url: string;
   };
+  onTypesLoaded?: (types: string[]) => void;
 };
 
-export default function PokemonCard({ pokemon }: PokemonCardProps) {
-  const router = useRouter(); // Add this line
+export default function PokemonCard({ pokemon, onTypesLoaded }: PokemonCardProps) {
+  const router = useRouter();
   const [pokemonDetails, setPokemonDetails] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false); // Start as false
   const [error, setError] = useState<string | null>(null);
   
   // Extract the Pokemon ID from the URL
@@ -25,6 +27,11 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
         setLoading(true);
         const details = await getPokemonDetails(pokemonId);
         setPokemonDetails(details);
+        
+        if (onTypesLoaded) {
+          const types = details.types.map((typeInfo: any) => typeInfo.type.name);
+          onTypesLoaded(types);
+        }
       } catch (err) {
         setError("Error loading Pokemon details");
         console.error(err);
@@ -34,9 +41,8 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
     };
     
     fetchPokemonDetails();
-  }, [pokemonId]);
+  }, [pokemonId, onTypesLoaded]);
   
-  // Function to get background color based on Pokemon type
   const getTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
       normal: '#A8A878',
@@ -61,50 +67,61 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
     return colors[type] || '#888888';
   };
   
-  if (loading) {
-    return (
-      <View style={styles.card}>
-        <ActivityIndicator size="small" color="#f4511e" />
-      </View>
-    );
-  }
-  
-  if (error || !pokemonDetails) {
-    return (
-      <View style={styles.card}>
-        <Text style={styles.errorText}>Error loading Pokemon</Text>
-      </View>
-    );
-  }
-  
-  const mainType = pokemonDetails.types[0].type.name;
-  const cardColor = getTypeColor(mainType);
+  // Show basic card structure immediately, even while loading details
+  const cardColor = pokemonDetails ? getTypeColor(pokemonDetails.types[0].type.name) : '#DDD';
   
   return (
     <TouchableOpacity onPress={() => router.push(`/pokemon/${pokemonId}`)}>
       <View style={[styles.card, { borderColor: cardColor }]}>
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: pokemonDetails.sprites.other['official-artwork'].front_default || pokemonDetails.sprites.front_default }}
-            style={styles.image}
-            resizeMode="contain"
-          />
+          {pokemonDetails ? (
+            <Image
+              source={{ 
+                uri: pokemonDetails.sprites.other['official-artwork'].front_default || 
+                     pokemonDetails.sprites.front_default 
+              }}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              {loading ? (
+                <ActivityIndicator size="small" color="#f4511e" />
+              ) : (
+                <Text style={styles.placeholderText}>#{pokemonId}</Text>
+              )}
+            </View>
+          )}
         </View>
+        
         <View style={styles.infoContainer}>
           <Text style={styles.id}>#{pokemonId.padStart(3, '0')}</Text>
-          <Text style={styles.name}>{pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</Text>
+          <Text style={styles.name}>
+            {pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}
+          </Text>
+          
           <View style={styles.typesContainer}>
-            {pokemonDetails.types.map((typeInfo: any) => (
-              <View 
-                key={typeInfo.type.name} 
-                style={[
-                  styles.typeTag, 
-                  { backgroundColor: getTypeColor(typeInfo.type.name) }
-                ]}
-              >
-                <Text style={styles.typeText}>{typeInfo.type.name}</Text>
+            {pokemonDetails ? (
+              pokemonDetails.types.map((typeInfo: any) => (
+                <View 
+                  key={typeInfo.type.name} 
+                  style={[
+                    styles.typeTag, 
+                    { backgroundColor: getTypeColor(typeInfo.type.name) }
+                  ]}
+                >
+                  <Text style={styles.typeText}>{typeInfo.type.name}</Text>
+                </View>
+              ))
+            ) : (
+              <View style={styles.loadingTypes}>
+                {loading ? (
+                  <Text style={styles.loadingText}>Loading types...</Text>
+                ) : error ? (
+                  <Text style={styles.errorText}>Error</Text>
+                ) : null}
               </View>
-            ))}
+            )}
           </View>
         </View>
       </View>
@@ -138,6 +155,19 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
   },
+  imagePlaceholder: {
+    width: 70,
+    height: 70,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#999',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   infoContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -155,6 +185,7 @@ const styles = StyleSheet.create({
   typesContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
+    minHeight: 24, // Reserve space for types
   },
   typeTag: {
     borderRadius: 20,
@@ -168,9 +199,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textTransform: 'capitalize',
   },
+  loadingTypes: {
+    flex: 1,
+  },
+  loadingText: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+  },
   errorText: {
     color: "red",
-    textAlign: "center",
+    fontSize: 12,
   },
 });
-
