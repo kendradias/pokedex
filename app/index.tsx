@@ -190,7 +190,7 @@ export default function HomePage() {
       
       <View style={styles.countContainer}>
         <Text style={styles.generationInfo}>
-          Pokémon from Generation 1-9
+          Pokémon from Generations 1-9
         </Text>
         <Text style={styles.totalCount}>
           {searchQuery.trim() 

@@ -131,7 +131,7 @@ export default function PokemonDetailScreen() {
         <Text style={styles.errorText}>{error || "Failed to load Pokemon"}</Text>
         <TouchableOpacity 
           style={styles.backButton} 
-          onPress={() => router.back()}
+          onPress={() => router.push('/')}
         >
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   quickNavText: {
     fontSize: 14,
     color: 'black',
-    fontWeight: '500',
+    fontWeight: 'bold',
   },
   spacer: {
     flex: 1,

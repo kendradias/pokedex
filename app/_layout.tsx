@@ -1,7 +1,8 @@
 // app/_layout.tsx
-import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Layout() {
   return (
@@ -23,7 +24,7 @@ export default function Layout() {
         />
         <Stack.Screen 
           name="pokemon/[id]" 
-          options={{ 
+          options={({ navigation }) => ({ 
             title: "Pokemon Details",
             headerStyle: {
               backgroundColor: '#f4511e',
@@ -32,7 +33,15 @@ export default function Layout() {
             headerTitleStyle: {
               fontWeight: 'bold',
             },
-          }} 
+            headerLeft: () => (
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('index')}
+                style={{ marginLeft: 15 }}
+              >
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+              </TouchableOpacity>
+            ),
+          })} 
         />
       </Stack>
     </>
